@@ -12,6 +12,20 @@
 \usepackage{tikz}
 \usepackage{changepage} 
 
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    frameround=fttt,
+    language=Prolog,
+    numbers=left,
+    breaklines=true,
+    keywordstyle=\color{blue}\bfseries, 
+    basicstyle=\ttfamily\color{red},
+    numberstyle=\color{black}
+    }
+
 \begin{document}
 
 \pagestyle{fancy}
@@ -72,13 +86,91 @@
 \newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}\\}
 \newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}}
 \newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{subsection}.\arabic{remark}\ - }\textit{#1}\\}
-\newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{subsection}.\arabic{remark}\ - }\textit{#1}}
-\newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{subsection}.\arabic{theorem}\ - }\textit{#1}\\}
-\newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{subsection}.\arabic{theorem}\ - }\textit{#1}}
+\newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}}
+\newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
+\newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}}
 
 \tableofcontents
 
 % Start of content
 \newpage
+
+\section{Introduction}
+
+\definitionn{Types of AI}
+\begin{enumerate}
+	\item \textit{Weak AI} - Can solve a specific task.
+	\item \textit{Strong AI} - Can solve general problems.
+	\item \textit{Ultra Strong AI} - Can solve general problems \& explain why/what it is doing.
+\end{enumerate}
+
+\section{Logic Programming}
+
+\definition{Logic Programming}
+\textit{Logic Programming} is a \textit{declarative paradigm} where programs are concieved as a logical theory, rather than a set-by-step description of an algorithm. A Procedure call is viewed as a theorem which the truth needs to be established about. (\ie executing a programming is analogous to searching for truth in a system).\\
+
+\remark{Variables}
+In \textit{Logic Programming} a \textit{Variable} is a variable in the mathematical sense, that is they are are placeholders that can take on any value.\\
+
+\remark{Machine Model}
+A \textit{Machine Model} is an abstraction of the computer on which programs are executed. In \textit{Imperative Programming} we assume a dynamic, state-based machine model where the state of the computer is given by the contents of its memory \& a program statement is a transition from one statement to another. In \textit{Logic Programming} we do not assume such a dynamic model.
+
+\subsection{Clausal Logic}
+
+\notation{Variables \& Values}
+\textit{Variables} are denoted by having a capitalised first letter, whereas \textit{values} are completly lowercase.\\
+
+\definition{Clausal Logic}
+\textit{Clausal Logic} is a formalism for representing \& reasoning with knowledge.\\
+\begin{center}
+\begin{tabular}{|l|l|}
+\textbf{Keyword}&\textbf{Description}\\
+{\lstinline!S:-C!}&\textbf{If} condition {\lstinline!C!} holds \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline!S:-C1,C2!}&\textbf{If} conditions {\lstinline!C1!} \textbf{and} {\lstinline!C2!} both hold \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline!connected(X,Y,...)!}&Objects are connected to each other.\\
+{\lstinline!nearby(X,Y,...)!}&Objects are near to each other.\\
+\end{tabular}
+\end{center}
+\nb We define \textit{connected}, \textit{close}, etc. depending upon the problem scenario.\\
+
+\definition{Facts \& Rules}
+\textit{Facts} are logical formulae which are defined for explicit values \textbf{only}. \textit{Facts} denoted unconiditional truth.
+\begin{center}{\lstinline!nearby(bond_street,oxford_circus).!}\end{center}
+\textit{Rules} are logical formula which are defined in termms of variables (and explicit values). \textit{Rules} denote conditional truth.
+\begin{center}{\lstinline!nearby(X,Y):-connected(X,Z,L),connected(Z,Y,L)!}\end{center}
+
+\definition{Query, \lstinline!?-!}
+A \textit{Query} asks a question about the knowledgebase we have defined. If we \underline{just} pass \textit{values} to a \textit{Query} then it shall simply return whether the statement is true or not. If we pass \textit{unbound variables} as well then it shall return values for the variable which make the statement true, if any exist.\\
+
+\examplee{Query}
+\begin{lstlisting}
+?-nearby(bond_street,oxford_circus)
+?-nearby(bond_street,X)
+\end{lstlisting}
+(1) will return \textit{true} if we have defined \lstinline!bond_street! to be near to \lstinline!oxford_circus!.\\
+(2) will return all the values of \lstinline!X! (\ie stations) which are near to \lstinline!bond_street!.\\
+
+\definition{Resolution}
+In order to answer a query \lstinline!?-Q1,Q2,...! find a rule \lstinline!A:-B1,...,Bn! such that \lstinline!A! matches with \lstinline!Q1! then proceed to answer \lstinline!?-B1,...,Bn,Q2,...!.\\
+This is a \textit{procedural interpretation} of logical formulae \& is what allows \textit{Logic} to be a programming language.\\
+
+\definition{Functor}
+\textit{Functor}s provide a way to name a complex object composed of simpler objects \& are never evaluated to determine a value.
+\begin{lstlisting}
+reachable(X,Y,noroute):-connected(X,Y,L)
+reachable(X,Y,route(Z,R)):-connected(X,Z,L),connected(Z,Y,R)
+\end{lstlisting}
+Querying \lstinline!?-reachable(oxford_circus,tottenham_court_road,R)! will return a route \lstinline!R! which connects the two stations, on a single line.\\
+The above definition can be read as \lstinline!X! is reachable from \lstinline!Y! if they are connected \textbf{or} if there exists a station \lstinline!Z! which is connected.\\
+
+\definition{List Functor, \lstinline!.!}
+The \textit{List Functor} takes two arguments, one on each side, and has terminator \lstinline![]!.
+\begin{center}
+[a,b,c]$\equiv$\lstinline!.(a,.(b,.(c,[])))!
+\end{center}
+Alternatively we can use a pipe to distinguish between a value and the rest of the list
+\begin{center}
+\lstinline![X,Y|R]!
+\end{center}
 
 \end{document}
