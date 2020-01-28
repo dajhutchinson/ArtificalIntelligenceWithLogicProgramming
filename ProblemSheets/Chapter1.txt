@@ -1,0 +1,32 @@
+--Question 1.1
+not_too_far(X,Y):-connected(X,Y,_). % replace 'true' with your definition
+not_too_far(X,Y):-connected(X,Z,_),connected(Z,Y,_).
+
+--Question 1.2
+?-nearby(W,charing_cross).
+?-connected(W,charing_cross,L).           nearby(X,Y):-connected(X,Y,_)
+                                          {X->W,Y->charing_cross}
+[]                                        connected(green_park,charing_cross,jubilee)
+                                          {W->green_park,L->jubilee}
+
+--Question 1.3
+
+--Question 1.4
+list([]).
+list([_|R]):-list(R).
+
+--Question 1.4 i)
+list([]).
+list([_,_|R]):-list(R).
+
+--Question 1.4 ii)
+list([_]).
+list([_,_|R]):-list(R).
+
+--Question 1.5
+reachable(X,Y,[]):-connected(X,Y,_).
+reachable(X,Y,[Z1,Z2|R]):-connected(X,Z1,_),
+    					  connected(Z1,Z2,_),
+                      reachable(Z2,Y,R).
+
+?-reachable(bond_street,piccadilly_circus,R)
