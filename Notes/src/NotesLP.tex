@@ -121,17 +121,21 @@ A \textit{Machine Model} is an abstraction of the computer on which programs are
 \textit{Variables} are denoted by having a capitalised first letter, whereas \textit{values} are completly lowercase.\\
 
 \definition{Clausal Logic}
-\textit{Clausal Logic} is a formalism for representing \& reasoning with knowledge.\\
+\textit{Clausal Logic} is a formalism for representing \& reasoning with knowledge.
 \begin{center}
-\begin{tabular}{|l|l|}
+\begin{tabular}{l|l}
 \textbf{Keyword}&\textbf{Description}\\
-{\lstinline!S:-C!}&\textbf{If} condition {\lstinline!C!} holds \textbf{then} statement {\lstinline!S!} is true.\\
-{\lstinline!S:-C1,C2!}&\textbf{If} conditions {\lstinline!C1!} \textbf{and} {\lstinline!C2!} both hold \textbf{then} statement {\lstinline!S!} is true.\\
-{\lstinline!connected(X,Y,...)!}&Objects are connected to each other.\\
-{\lstinline!nearby(X,Y,...)!}&Objects are near to each other.\\
+\hline
+{\lstinline!S:-C.!}&\textbf{If} condition {\lstinline!C!} holds \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline!S:-\+C.!}&\textbf{If} condition {\lstinline!C!} does \textbf{not} hold \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline|S:-C,!.|}&\textbf{If} condition {\lstinline!C!} holds \textbf{then return first} case where statement {\lstinline!S!} is true.\\
+{\lstinline!S:-C1,C2.!}&\textbf{If} conditions {\lstinline!C1!} \textbf{and} {\lstinline!C2!} both hold \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline!S:-C1;C2.!}&\textbf{If} at least one of {\lstinline!C1!} \textbf{or} {\lstinline!C2!} hold \textbf{then} statement {\lstinline!S!} is true.\\
+{\lstinline!connected(X,Y,...).!}&Objects are connected to each other.\\
+{\lstinline!nearby(X,Y,...).!}&Objects are near to each other.\\
 \end{tabular}
 \end{center}
-\nb We define \textit{connected}, \textit{close}, etc. depending upon the problem scenario.\\
+\nb We define \textit{connected}, \textit{near}, etc. depending upon the problem scenario.\\
 
 \definition{Facts \& Rules}
 \textit{Facts} are logical formulae which are defined for explicit values \textbf{only}. \textit{Facts} denoted unconiditional truth.
