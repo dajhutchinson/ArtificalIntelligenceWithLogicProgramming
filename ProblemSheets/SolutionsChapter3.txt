@@ -1,0 +1,9 @@
+3.3.1
+likes(T,S):-student_of(S,T),!.
+likes(peter,Y):-friendly(Y).
+student_of(paul,peter).
+student_of(maria,peter).
+friendly(maria).
+
+3.4
+?-max(3,3,3)

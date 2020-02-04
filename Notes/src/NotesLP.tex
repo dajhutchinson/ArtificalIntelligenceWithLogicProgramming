@@ -128,14 +128,11 @@ A \textit{Machine Model} is an abstraction of the computer on which programs are
 \hline
 {\lstinline!S:-C.!}&\textbf{If} condition {\lstinline!C!} holds \textbf{then} statement {\lstinline!S!} is true.\\
 {\lstinline!S:-\+C.!}&\textbf{If} condition {\lstinline!C!} does \textbf{not} hold \textbf{then} statement {\lstinline!S!} is true.\\
-{\lstinline|S:-C,!.|}&\textbf{If} condition {\lstinline!C!} holds \textbf{then return first} case where statement {\lstinline!S!} is true.\\
 {\lstinline!S:-C1,C2.!}&\textbf{If} conditions {\lstinline!C1!} \textbf{and} {\lstinline!C2!} both hold \textbf{then} statement {\lstinline!S!} is true.\\
 {\lstinline!S:-C1;C2.!}&\textbf{If} at least one of {\lstinline!C1!} \textbf{or} {\lstinline!C2!} hold \textbf{then} statement {\lstinline!S!} is true.\\
-{\lstinline!connected(X,Y,...).!}&Objects are connected to each other.\\
-{\lstinline!nearby(X,Y,...).!}&Objects are near to each other.\\
+{\lstinline|S:-C,!.|}&\textbf{Cut} the program after finding \textbf{first} \lstinline!S! where \lstinline!C! holds.
 \end{tabular}
 \end{center}
-\nb We define \textit{connected}, \textit{near}, etc. depending upon the problem scenario.\\
 
 \definition{Facts \& Rules}
 \textit{Facts} are logical formulae which are defined for explicit values \textbf{only}. \textit{Facts} denoted unconiditional truth.
@@ -176,5 +173,131 @@ Alternatively we can use a pipe to distinguish between a value and the rest of t
 \begin{center}
 \lstinline![X,Y|R]!
 \end{center}
+
+\remark{Logical Formulae}
+\textit{Logical Formulae} determine what is being modelled \& the set of formulae that can be derived by applying inference rules.\\
+\ie \textit{Logical Formulae} have both declarative (what is true) \& procedural (how the truth is reached) meaning.\\
+Changing the order of statements in a clause does not change the declarative meaning ($3=2+1\equiv3=1+2$) but does change the procedular meaning \& thus chanes what loops we may get stuck in, what solutions are found first \& how long execution takes.\\
+\nb The procedular meaning of \textit{Logical Formulae} is what allows them to be used as a programming language.
+
+% CHAPTER 3.1
+\subsection{SLD-Resolution}
+
+\definition{SLD-Resolution}
+\textit{SLD-Resolution} is the process $\mathtt{Prolog}$ uses to resolve a query.
+\begin{enumerate}
+	\item \textit{\textbf{S}election Rule} - Left-to-right (Always take the left branch if it is there).\\
+	This is equivalent to reading clauses top to bottom in a $\mathtt{Prolog}$ program.
+	\item \textit{\textbf{L}inear Resolution} - The shape of the proof trees obtained.
+	\textit{\textbf{D}efinite Clauses}
+\end{enumerate}
+\nb These rules vary for different languages.\\
+
+\definition{SLD-Tree}
+\textit{SLD-Trees} are graphical representations of \textit{SLD-Resolution}.\\
+They are not the same as a proof tree as only the resolvents are shown (no input clauses or unifiers) andit contains every possible resolution step, leading to every leaf on an \textit{SLD-Tree} being an empty clause $\square$.\\
+The left-most leaf in an \textit{SLD-Tree} will be returned as the first solution, if we end up in an infinite sub-tree then no solution will ever be returned.\\
+Non-leaf nodes in \textit{SLD-Trees} are called \textit{choice points}.
+\nb If a leaf is a failure then we underline it.\\
+
+\proposition{Traversing an SLD-Tree}
+$\mathtt{Prolog}$ traverses \textit{SLD-Trees} in a \textit{depth-first} fashion, backtracking whenever it reaches a success or a failure. This can be visualised as following the left branch of the tree whenever it is avaiable. This leads to $\mathtt{Prolog}$ being incomplete (does not always return all solutions) as once it is in an infinite sub-tree it has no way of escaping.\\
+
+\remark{Backtracking}
+Since we need to be able to \textit{Backtrack} after finding successes or failures, we need to store all previous resolvents which have not been fully explored yet as well as a pointer to the most recent program clause that has been tried.\\
+Due to the depth-first nature of $\mathtt{Prolog}$ this can be stored as a \textit{stack}.\\
+
+\remark{Order of clauses}
+Due to the \textit{Selection Rule} being left-to-right you should \textit{put non-recursive clauses before recursive clauses} to ensure that solutions are found before infinite sub-trees.\\
+
+\definition{Transitivity}
+\textit{Transitivity} is a property of predicate that states
+$$X=Y\ \&\ Y=Z\implies X=Z$$
+\textit{Transitivity} clauses can cause infinite loops is not implemented carefully.\\
+
+\remark{Why not use Breadth-First Search?}
+\textit{Breadth-First Search} requires for each branch at a given level to be tracked (rather than just one in \textit{Depth-First Search}), this requires more memory and was deemed memory-inefficient by $\mathtt{Prolog}$ developers.\\
+
+\remark{Queries with no solution}
+Some queries do not have a solution as the \textit{SLD-Tree} they produce is infinite, no matter how it is read \& thus an answer can never be resolved.\\
+Consider
+\begin{lstlisting}
+brother_of(paul,peter).
+brother_of(X,Y):-brother_of(Y,X).
+\end{lstlisting}
+The query \lstinline!brother_of(peter,maria)! has no answer since its \textit{SLD-Tree} is infinite.\\
+
+% CHAPTER 3.2
+\definition{Cut, \lstinline|!|}
+A \textit{Cut} says that once it has been reached, stick to all the variable substitutions found after entering its clause. (\ie Do not backtrack past it?).\\
+\textit{Cuts} have the effect of pruning the \textit{SLD-Tree}.\\
+\textit{Cuts} which \underline{don't} remove any successful branches are called \textit{Green Cuts} and are harmless.\ \textit{Cuts} which \underline{do} remove successful branches are caleld \textit{Red Cuts} and affects the procedular meaning of the process.\\
+\nb \textit{Cuts} make the left sub-tree deterministic.\\
+
+\notationn{In SDL-Trees we put a box around subtrees which are pruned by \lstinline|!|.}
+
+% Chapter 3.3
+\subsection{Negation as Failure}
+
+\definition{Netgation as Faliure}
+\textit{Negation as Failure} is an interpretation of the semantics for failure.\\
+It states if we \underline{cannot} prove \lstinline!q! to be true then we take \lstinline!not(q)! to be true.\\
+\ie If we don't have enough information to state where \lstinline!q! is true then we assume it to be false.\\
+\eg Negation as failure would resolve that \textit{``I cannot prove God exists, therefore God does not exist.''}.\\
+
+\proposition{Altering Negation as Failure}
+
+\proposition{Cut as Failure}
+Suppose we have a program of the following form
+\begin{lstlisting}
+p:-q,!,r.
+p:-s.
+\end{lstlisting}
+We can interpret it as
+\begin{lstlisting}
+p:-q,r.
+p:-not_q,s.
+\end{lstlisting}
+where \lstinline!not_q:=q,fail.!.\\
+
+\definition{Negation Function, \lstinline!not()!}
+Let \lstinline!Goal! be a literal we wish to negate
+\begin{lstlisting}
+not(Goal):-Goal,!,fail.
+not(Goal).
+\end{lstlisting}
+
+\definition{Call Function, \lstinline!call()!}
+TODO\\
+
+\remark{\lstinline!not()! \& \lstinline!call()! are called meta-predicates as they take formulas as arguments.}
+
+\remark{Negation as Failure is \textbf{not} Logical Negation}
+If we cannot prove predicate \lstinline!q! we know that \lstinline!q! \underline{is not} a logical consequence of the program, but that does not mean that its negation \lstinline!:-q! \underline{is} a logical consequence of the program.\\
+This is acceptable reasoning in some scenarios, but not others.\\
+
+\definition{Logical Negation}
+\textit{Logical Negation} can only be expressed by indefinite clauses, as below
+\begin{lstlisting}
+p;q,r.
+p;q:-s.
+s.
+\end{lstlisting}
+
+%CHAPTER 3.4
+
+\definition{Conditionals, \lstinline!if_then_else()!}
+We give the following definition where if \lstinline!S! holds then \lstinline!T! is executed, else \lstinline!U! is executed.
+\begin{lstlisting}
+if_then_else(S,T,U):-S,!,T/
+if_then_else(S,T,U):-U.
+\end{lstlisting}
+
+\notation{Implication, \lstinline!->!}
+We can nest \lstinline!if_then_else()! to add more \textit{elif} clauses but is clumsy notation.\\
+Instead we simplify \lstinline!if_then_else(S,T,U).! to \lstinline!S->T;U.!.\\
+This can be nested as \lstinline!P->Q;(R->S;T)!. The keyword \lstinline!otherwise! can be used instead of \lstinline!true! as it can be more readable.
+
+% CHAPTER 3.5
 
 \end{document}
