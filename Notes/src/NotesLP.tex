@@ -21,6 +21,7 @@
     language=Prolog,
     numbers=left,
     breaklines=true,
+    mathescape=true,
     keywordstyle=\color{blue}\bfseries, 
     basicstyle=\ttfamily\color{red},
     numberstyle=\color{black}
@@ -74,21 +75,28 @@
 \newcommand{\x}[0]{\textbf{x}}
 \newcommand{\iid}[0]{\overset{\text{iid}}{\sim}}
 \newcommand{\proved}[0]{$\hfill\square$\\}
+\newcommand{\LL}[0]{\mathcal{L}}
 
-\newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{subsection}.\arabic{definition}\ - }\textit{#1}\\}
-\newcommand{\definitionn}[1]{\stepcounter{definition} \textbf{Definition \arabic{subsection}.\arabic{definition}\ - }\textit{#1}}
-\newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{subsection}.\arabic{proof}\ - }\textit{#1}\\}
-\newcommand{\prooff}[1]{\stepcounter{proof} \textbf{Proof \arabic{subsection}.\arabic{proof}\ - }\textit{#1}}
-\newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{subsection}.\arabic{example}\ - }\textit{#1}\\}
-\newcommand{\examplee}[1]{\stepcounter{example} \textbf{Example \arabic{subsection}.\arabic{example}\ - }\textit{#1}}
-\newcommand{\notation}[1]{\stepcounter{notation} \textbf{Notation \arabic{subsection}.\arabic{notation}\ - }\textit{#1}\\}
-\newcommand{\notationn}[1]{\stepcounter{notation} \textbf{Notation \arabic{subsection}.\arabic{notation}\ - }\textit{#1}}
-\newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}\\}
-\newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{subsection}.\arabic{proposition}\ - }\textit{#1}}
-\newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{subsection}.\arabic{remark}\ - }\textit{#1}\\}
+\newcommand{\definition}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}\\}
+\newcommand{\definitionn}[1]{\stepcounter{definition} \textbf{Definition \arabic{section}.\arabic{definition}\ - }\textit{#1}}
+\newcommand{\proof}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}\\}
+\newcommand{\prooff}[1]{\stepcounter{proof} \textbf{Proof \arabic{section}.\arabic{proof}\ - }\textit{#1}}
+\newcommand{\example}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}\\}
+\newcommand{\examplee}[1]{\stepcounter{example} \textbf{Example \arabic{section}.\arabic{example}\ - }\textit{#1}}
+\newcommand{\notation}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}\\}
+\newcommand{\notationn}[1]{\stepcounter{notation} \textbf{Notation \arabic{section}.\arabic{notation}\ - }\textit{#1}}
+\newcommand{\proposition}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}\\}
+\newcommand{\propositionn}[1]{\stepcounter{proposition} \textbf{Proposition \arabic{section}.\arabic{proposition}\ - }\textit{#1}}
+\newcommand{\remark}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}\\}
 \newcommand{\remarkk}[1]{\stepcounter{remark} \textbf{Remark \arabic{section}.\arabic{remark}\ - }\textit{#1}}
 \newcommand{\theorem}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}\\}
 \newcommand{\theoremm}[1]{\stepcounter{theorem} \textbf{Theorem \arabic{section}.\arabic{theorem}\ - }\textit{#1}}
+
+% stop line numbers in lstlisting
+\newcommand*\Suppressnumber{\lst@AddToHook{OnNewLine}{\let\thelstnumber\relax\advance\c@lstnumber-\@ne\relax}}
+% continue line numbers in lstlisting
+\newcommand*\Reactivatenumber{\lst@AddToHook{OnNewLine}{\let\thelstnumber\origthelstnumber\advance\c@lstnumber\@ne\relax}}
+
 
 \tableofcontents
 
@@ -298,6 +306,195 @@ We can nest \lstinline!if_then_else()! to add more \textit{elif} clauses but is 
 Instead we simplify \lstinline!if_then_else(S,T,U).! to \lstinline!S->T;U.!.\\
 This can be nested as \lstinline!P->Q;(R->S;T)!. The keyword \lstinline!otherwise! can be used instead of \lstinline!true! as it can be more readable.
 
-% CHAPTER 3.5
+%TODO CHAPTER 3.5
+
+\newpage
+\setcounter{section}{-1}
+\section{First Order Logic}
+
+\definition{The Alphabet}
+A \textit{First Order Logic} language can comprise the following types of symbols
+\begin{center}
+\begin{tabular}{l|l|l}
+\textbf{Name}&\textbf{Description}&\textbf{Example Notation}\\\hline
+Variables&Arbitrary objects&\lstinline!X Y! (Capitalised)\\
+Constants&Specified objects&\lstinline!oliver! (Lower Case)\\
+Functions&Object mappings&\lstinline!mother/1 father/1!\\
+Propositions&Unstructured assertions&\lstinline!p q!\\
+Predicates&Object properties \& relations&\lstinline!happy/1 loves/2!\\
+Connectives&Connect two predicates&\lstinline!$\neg\wedge\vee\to$!\\
+Quantifiers&Amount of objects to consider&\lstinline!$\forall\exists$!\\
+Logical Constants&True \& False&\lstinline!$\top\bot$!\\
+Punctuation&Structure of groupings&\lstinline!$(),:$!\\
+Equality&Equivalent values&\lstinline!$=$!
+\end{tabular}
+\end{center}
+
+\definition{Arity}
+The \textit{Arity} of a \textit{Function} is the number of arguments it takes.\\
+\eg \lstinline!father/1! has $1$-\textit{Arity}.\\
+
+\subsection{Syntax}
+
+\definition{Term}
+A \textit{Term} is a 
+\begin{enumerate}
+	\item Single constant, \lstinline!c!.
+	\item Single variable, \lstinline!X!.
+	\item $n$-arity function applied to $n$ terms, \lstinline!f($t_1,\dots,t_n$)! where \lstinline!$t_1,\dots,t_n$! are Terms.
+\end{enumerate}
+
+\definition{Atom}
+An \textit{Atom} is a
+\begin{enumerate}
+	\item Single proposition symbol, \lstinline!p!.
+	\item $n$-arity predicate applied to $n$ terms, \lstinline!r($t_1,\dots,t_n$)! where \lstinline!$t_1,\dots,t_n$! are Terms.
+\end{enumerate}
+
+\definition{Formula}
+A \textit{Formula} is 
+\begin{enumerate}
+	\item An atom, \lstinline!a!.
+	\item A logical constant, \lstinline!\top! or \lstinline!\bot!.
+	\item A negation of a formula, \lstinline!$\neg$f!.
+	\item A conjugtion of two formulae, \lstinline!f$\wedge$g!.
+	\item A disjugtion of two formulae, \lstinline!f$\vee$g!.
+	\item A condition of two formulae, \lstinline!f$\to$g!.
+	\item A universal quantification of a formula and a variable, \lstinline!$\forall$X:f!.
+	\item A existential quantification of a formula and a variable, \lstinline!$\exists$X:f!.
+\end{enumerate}
+
+\definition{Normal Forms}
+\textit{Normal Forms} are a restricted sub-languages of \textit{First Order Languages}.\\
+\textit{Normal Forms} are used to facilitate the storage of logical formula in a computer's memory by simplifying the inference procedures required for their manipulation.\\
+\nb \textit{Prenex Normal Forms} \& \textit{Conjunctive Normal Forms} are examples.\\
+
+\definition{Prenex Normal Forms, PNFs}
+\textit{Prenex Normal Forms} only allow formulae of the form
+\begin{center}
+\lstinline!<prefix><matrix>!
+\end{center}
+where \lstinline!prefix! is a string of quantifiers \& \lstinline!matrix! is a quantifier-free formula.\\
+\nb There is an algorithm for converting any \textit{First Order Language} formula into \textit{PNF} form (\textbf{Theorem 0.1}).\\
+
+\definition{Conjunctive Normal Forms, CNFs}
+\textit{Conjunctive Normal Forms} are more restrictive that \textit{PNFs} since they only allow formulae of the form
+\begin{center}
+\lstinline!<prefix><matrix>!
+\end{center}
+where \lstinline!prefix! is a string of \underline{universal} quantifiers \& \lstinline!matrix! is a conjuction of disjunctions of atoms, or their negations.\\
+This conjuctions of disjunctions are known as clauses.\\
+
+\remark{CNF Matrix}
+The \textit{Matrix} of a \textit{CNF} is either
+\begin{enumerate}
+	\item A set of sets of literals (\ie atoms \& their negations).
+	\item A set ofclauses of the form \lstinline!<body>$\to$<head>! where the \lstinline!head! is a disjunction of literals (or \lstinline!$\bot$!), and the \lstinline!body! is a conjunction of literals (or \lstinline!$\top$!).
+\end{enumerate}
+
+\theoremm{FOL to PNF}
+\begin{enumerate}
+	\item Replace implications,\lstinline!p$\to$q! by disjunction and negation, \lstinline!($\neg$p$)\vee$q!.
+	\item Push negations inside, so that each of them immediately precede a literal.
+	\item Move quantifiers to the front (the result is said to be \textit{PNF}).
+	\item Replace existential variables by \textit{Skolem Functors}. %TODO Skolem Functors
+	\item Rewrite into \textit{CNF} (\ie A conjunction of disjunction of literals).
+	\item Rewrite each conjunct to a clause.
+\end{enumerate}
+
+\examplee{Theorem 0.1}
+\begin{lstlisting}[escapeinside={\%}{\%},firstnumber=0]
+($\forall$Y:$\exists$:mother_of(X,Y))$\wedge$($\neg\forall$Z:$\exists$W:woman(Z)$\to$mother_of(Z,W))
+($\forall$Y:$\exists$:mother_of(X,Y))$\wedge$($\neg\forall$Z:$\exists$W:$\neg$woman(Z)$\vee$mother_of(Z,W))
+($\forall$Y:$\exists$:mother_of(X,Y))$\wedge$($\exists$Z:$\forall$W:woman(Z)$\wedge\neg$mother_of(Z,W))
+$\forall$Y:$\exists$X:$\exists$Z:$\forall$W:(mother_of(X,Y)$\wedge$woman(Z)$\wedge\neg$mother_of(Z,W))
+$\forall$Y:$\forall$W:(mother_of(sk1(Y),Y)$\wedge$woman(sk2(Y))$\wedge\neg$mother_of(sk2(Y),W))
+mother_of(sk1(Y),Y)$\wedge$woman(sk2(Y))$\wedge\neg$mother_of(sk2(Y),W)%\addtocounter{lstnumber}{-1}% 
+mother_of(mother(Y),Y)$\wedge$woman(childless_woman)$\wedge\neg$mother_of(childless_woman,W)
+$\top\to$mother_of(mother(Y),Y)%\lst@AddToHook{OnNewLine}{\let\thelstnumber\relax\advance\c@lstnumber-\@ne\relax}%
+$\top\to$woman(childless_woman)$\leftarrow\top$
+mother_of(childless_woman,W)$\to\bot$
+\end{lstlisting}
+This can be expressed in Prolog as
+\begin{lstlisting}[escapeinside={\%}{\%}]
+mother_of(mother(Y),Y).
+woman(childless_woman).
+:- mother_of(childless_woman,W).
+\end{lstlisting}
+
+\subsection{Semantics}
+
+\definition{Assignment}
+Let $\LL$ be a \textit{First Order Language} with domain $|\LL|$.\\
+An \textit{Assignment} is a function \lstinline!h()! from a variable symbol \lstinline!v!$\in\LL$ to $|\LL|$.\\
+
+
+\definition{Interpretation}
+Let $\LL$ be a \textit{First Order Language} with domain $|\LL|$.\\
+An \textit{Assignment} is a function \lstinline!()$^I$! from an $n$-arity function symbol \lstinline!f/n!$\in\LL$ to functions $|\LL|^n\to|\LL|$, and from $n$-arity predicate symbols \lstinline!p/n! of $\LL$ to relations on $|\LL|^n$.\\
+
+\definition{Value}
+Let $\LL$ be a \textit{First Order Language} with domain $|\LL|$.\\
+The \textit{Value} of a term, \lstinline!t!, denoted \lstinline![t]$^{I,h}$! is defined as
+\begin{center}\begin{tabular}{ll}
+\lstinline![X]$^{I,h}$!:=\lstinline!h(X)!&if \lstinline!t! is a variable \lstinline!X!.\\
+\lstinline![f($t_1,\dots,t_n$)]$^{I,h}$!:=\lstinline!f$^I$([$t_1$]$^{I,h},\dots,$[$t_n$]$^{I,h}$)!& if \lstinline!t! is a term of the form \lstinline!f($t_1,\dots,t_n$)!.
+\end{tabular}\end{center}
+
+\definition{Satisfaction, \lstinline!$\vDash$!}
+The \textit{Satisfaction} of a formula \lstinline!f!, denoted \lstinline!I,h$\vDash$f! is defined as
+\begin{center}\begin{tabular}{lll}
+\lstinline!I,h$\vDash\top$!\\
+\lstinline!I,h$\not\vDash\bot$!\\
+\lstinline!I,h$\vDash$p($t_1,\dots,t_n)$!&iff&\lstinline!p$^I$([$t_1$]$^{I,h},\dots,$[$t_n$]$^{I,h}$)!\\
+\lstinline!I,h$\vDash$f$\wedge$g!&iff&\lstinline!I,h$\vDash$f! and \lstinline!I,h$\vDash$g!\\
+\lstinline!I,h$\vDash\neg$f!&iff&\lstinline!I,h$\not\vDash$f!\\
+\lstinline!I,h$\vDash\forall$X:f!&iff&\lstinline!I,h[X$\mapsto$d]$\vDash$f! for every \lstinline!d!$\in|\LL$
+\end{tabular}\end{center}
+\nb Denotes if a formula is valid for the given interpretation, \lstinline!I!, \& assignment, \lstinline!h!.\\
+
+\definition{Model of Formula}
+An interpreation, \lstinline!M!, is a \textit{Model} of a formula, \lstinline!f!, denoted \lstinline!M$\vDash$f! iff \lstinline!M,h$\vDash$f! for all assignments \lstinline!h!$\in\LL_\text{var}\to|\LL|$.\\
+
+
+\definition{Model of Set of Formulae}
+An interpreation, \lstinline!M!, is a \textit{Model} of a set of formulae, \lstinline!F!, denoted \lstinline!M$\vDash$F! iff \lstinline!M$\vDash$f! for all \lstinline!f!$\in$\lstinline!F!.\\
+
+\remark{A set of formulae is known as a \underline{Theory}}
+
+\definition{Entailment}
+A set of formulae, \lstinline!F!, \textit{Entails} a set of formulae, \lstinline!G!, denoted \lstinline!F$\vDash$G! iff every model of \lstinline!F! is a model of \lstinline!G!.\\
+\nb Here \lstinline!F! is an alternative semantics to \lstinline!G!.
+
+\subsection{Herbrand}
+
+\definition{Herbrand}
+A \textit{Herbrand Universe} is a set of all possible ground \textit{Terms}.\\
+A \textit{Herbrand Base} is a set of all possible ground \textit{Atoms} (all possible combinations of ground terms as arguments to predicates).\\
+A \textit{Herbrand Interpretation} is any subset of the \textit{Herbrand Base}.\\
+A \textit{Herbrand Model} is a \textit{Herbrand Interpreation} which is said to be true.\\
+
+
+\example{Herbrand}
+Consider a \textit{First Order Language} which consists of two constants \lstinline!peter! \& \lstinline!maria! and two predicates \lstinline!teacher/1! \& \lstinline!student_of/2!.\\
+Then the \textit{Herbrand Universe} is
+\begin{center}
+\{\lstinline!peter!,\lstinline!maria!\}
+\end{center}
+And the \textit{Herbrand Base} is
+\begin{center}
+\{\lstinline!teacher(peter)!,\lstinline!teacher(maria)!,\\
+\lstinline!student_of(peter,peter)!,\lstinline!student_of(peter,maria)!,\\
+\lstinline!student_of(maria,peter)!,\lstinline!student_of(maria,maria)!\}
+\end{center}
+A \textit{Herbrand Interpretation} would be any subset of these six.\\
+Which of these subsets is a \textit{Herbrand Model} depends on how we define the predicates, \lstinline!teacher/1! \& \lstinline!student_of/2!.\\
+
+\definition{Horn Theory}
+A \textit{Horn Theory}, is a theory whose clausal form has the property that every clause has at most one postive literal.\\
+\nb A formula entails a \textit{Horn Theory} if it satisfies the minimal model of the \textit{Horn Theory}.\\
+\nb \textit{Horn Theories} have a unique minimal model.\\
+
+
 
 \end{document}
