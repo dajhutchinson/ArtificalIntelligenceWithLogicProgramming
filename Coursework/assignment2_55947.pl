@@ -4,6 +4,7 @@ candidate_number(55947).
  *  start.
  *  press "run"
  *  reset_game. join_game(A). reset_game.
+ *  set_prolog_flag(answer_write_options,[max_depth(0)]).
  */
 
 solve_task(Task,Cost):-
@@ -31,16 +32,16 @@ solve_task_bt(Task,Current,D,RR,Cost,NewPos) :- % D=Depth,RR=Reverse path
 
 % Has task been solved
 achieved(go(Exit),Current,RPath,Cost,NewPos) :- % task=go to given position (Exit)
-  Current = [c(Cost,NewPos)|RPath], % Check Current state has correct form
-  ( Exit=none -> true               % No target given (trivally complete)
-  ; otherwise -> RPath = [Exit|_]   % path starts at target
+  Current = [c(Cost,NewPos)|RPath], ( % Check Current state has correct form
+    Exit=none -> true;                 % No target given (trivally complete)
+    otherwise -> RPath = [Exit|_]     % path starts at target
   ).
 
 % Has task been solved
 achieved(find(Obj),Current,RPath,Cost,NewPos) :- % task=find an object
-  Current = [c(Cost,NewPos)|RPath],                        % Check Current has correct form
-  ( Obj=none    -> true                                    % No target given
-  ; otherwise -> RPath = [Last|_],map_adjacent(Last,_,Obj) % Append position adjacent to target
+  Current = [c(Cost,NewPos)|RPath], (                      % Check Current has correct form
+    Obj=none    -> true;                                    % No target given
+    otherwise -> RPath = [Last|_],map_adjacent(Last,_,Obj) % Append position adjacent to target
   ).
 
 search(F,N,N,1) :- % return an adjacent position which is not occupied (ie valid to move into)
@@ -94,6 +95,29 @@ update_agenda(Current_Agenda,Target,New_Agenda):-
   append(Rest,New_Moves,Unsorted_New_Agenda),
   sort(Unsorted_New_Agenda,New_Agenda).
 
+% Task has been completed if first item is agenda moves onto target
+% +Target +Agenda -Cost -RPath
+solve_task_as(Target,Agenda,Cost,RPath):-
+  Agenda=[(Details,Target)|Rest],
+  Details=(_,Cost,RPath),!.        % Placeholder for path not being too long
+
+% Task not complete, update agenda with new moves
+% +Target +Agenda -Cost -RPath
+% Cost & RPath are extracted from agenda
+solve_task_as(Target,Agenda,Cost,RPath):-
+  update_agenda(Agenda,Target,New_Agenda),
+  solve_task_as(Target,New_Agenda,Cost,RPath).
+  % solve_task_as(p(20,20),[((0,0,[]),p(1,1))],Cost,RPath).
+
+solve_task_1(Task,Cost,Path):-
+  Task=go(Target),
+  my_agent(Agent),
+  query_world(agent_current_position,[Agent,P]),
+  Initial_Agenda=[((0,0,[]),P)],
+  solve_task_as(Target,Initial_Agenda,Cost,RPath),
+  RRPath=[Target|RPath],
+  reverse(RRPath,[_Init|Path]),
+  query_world(agent_do_moves,[Agent,Path]).
 /*
  *  TESTS
  */
@@ -106,3 +130,13 @@ test_1(Agenda,Pos,Rest):-
 
 test_2(Agenda,Pos,RPath):-
   Agenda=[((_TC,Cost_to_Pos,RPath),Pos)|Rest].
+
+test_4(Target,Agenda,C,RP):-
+  Agenda=[((_TC,C,RP),Target)|_Rest].
+
+test_5(Target,Agenda,Cost,RPath):-
+  Agenda=[(Details,Target)|Rest],
+  Details=(_,Cost,RPath),
+  length(RPath,L),
+  L@>2.
+  % test_5(p(1,1),[((5,6,[7,8,9]),p(1,1)),p(2,2)],Cost,RPath).
