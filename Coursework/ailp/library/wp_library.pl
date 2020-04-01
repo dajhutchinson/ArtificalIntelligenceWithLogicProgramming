@@ -30,6 +30,7 @@
 % wp(+Querry, -WikiText)
 wp(Q,WT) :-
   wp_cache(Q,WT),!.
+  
 wp(Q,WT) :-
   wp_query2URL(Q,URL),
   http_open(URL, R, []),

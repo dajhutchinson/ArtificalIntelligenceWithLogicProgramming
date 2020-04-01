@@ -7,45 +7,15 @@ candidate_number(55947).
  *  set_prolog_flag(answer_write_options,[max_depth(0)]).
  */
 
+% solve task using A*
+% +Task (go/find) +Cost -Path
 solve_task(Task,Cost):-
-  my_agent(Agent),                                    % Get agent
-  query_world( agent_current_position, [Agent,P] ),   % Get agent position
-  solve_task_bt(Task,[c(0,P),P],0,R,Cost,_NewPos),!,  % prune choice point for efficiency
-  reverse(R,[_Init|Path]),                            % reverse path so starts at agent
-  query_world( agent_do_moves, [Agent,Path] ).        % follow path
-
-%%%%%%%%%% Useful predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% backtracking depth-first search, needs to be changed to agenda-based A*
-
-% solve task by backtracking with depth-first search
-solve_task_bt(Task,Current,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
-  achieved(Task,Current,RPath,Cost,NewPos). % task complete
-
-% solve task by backtracking with depth-first search
-solve_task_bt(Task,Current,D,RR,Cost,NewPos) :- % D=Depth,RR=Reverse path
-  Current = [c(F,P)|RPath], % Expand current
-  search(P,P1,R,C), % Get adjacent position (which can be moved into)
-  \+ memberchk(R,RPath),  % check we have not been here already
-  D1 is D+1,              % Distance covered
-  F1 is F+C,              % Cost to move there
-  solve_task_bt(Task,[c(F1,P1),R|RPath],D1,RR,Cost,NewPos).  % backtrack search
-
-% Has task been solved
-achieved(go(Exit),Current,RPath,Cost,NewPos) :- % task=go to given position (Exit)
-  Current = [c(Cost,NewPos)|RPath], ( % Check Current state has correct form
-    Exit=none -> true;                 % No target given (trivally complete)
-    otherwise -> RPath = [Exit|_]     % path starts at target
-  ).
-
-% Has task been solved
-achieved(find(Obj),Current,RPath,Cost,NewPos) :- % task=find an object
-  Current = [c(Cost,NewPos)|RPath], (                      % Check Current has correct form
-    Obj=none    -> true;                                    % No target given
-    otherwise -> RPath = [Last|_],map_adjacent(Last,_,Obj) % Append position adjacent to target
-  ).
-
-search(F,N,N,1) :- % return an adjacent position which is not occupied (ie valid to move into)
-  map_adjacent(F,N,empty).
+ my_agent(Agent),
+ query_world(agent_current_position,[Agent,Cur_Pos]), % get current position
+ Initial_Agenda=[((0,0,[]),Cur_Pos)], % initial agenda start at current position
+ solve_task_as(Task,Initial_Agenda,Cost,RPath), % solve the task
+ reverse(RPath,[_Init|Path]), % Reverse path & remove starting node
+ query_world(agent_do_moves,[Agent,Path]). % display pay
 
 /*
  *  ME
@@ -114,16 +84,6 @@ solve_task_as(Task,Agenda,Cost,RPath):-
   update_agenda(Agenda,Task,New_Agenda),
   solve_task_as(Task,New_Agenda,Cost,RPath).
   % solve_task_as(p(20,20),[((0,0,[]),p(1,1))],Cost,RPath).
-
-% solve task using A*
-% +Task (go/find) +Cost -Path
-solve_task_1(Task,Cost):-
-  my_agent(Agent),
-  query_world(agent_current_position,[Agent,Cur_Pos]), % get current position
-  Initial_Agenda=[((0,0,[]),Cur_Pos)], % initial agenda start at current position
-  solve_task_as(Task,Initial_Agenda,Cost,RPath), % solve the task
-  reverse(RPath,[_Init|Path]), % Reverse path & remove starting node
-  query_world(agent_do_moves,[Agent,Path]). % display pay
 
 % finall occurences of New_Pos in Agenda which are cheaper (or equally expensive)
 % test_7([((1,2,[3,4]),p(1,1)),((11,12,[13,14]),p(1,2)),((21,22,[23,24]),p(1,1))],p(1,1),10,X).
