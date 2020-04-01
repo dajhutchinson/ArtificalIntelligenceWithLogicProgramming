@@ -70,7 +70,7 @@ search_as((Pos,Cost_to_Pos,RPath),go(Target_Pos),Current_Agenda,NewPos,(Total_Co
 % Get a valid move when doing FIND task
 % difference here is that we cannot estimate distance to goal
 % +Pos +Cost_to_Pos +RPath +Task(go/find) +Current_Agenda -NewPos -Total_Cost -Cost_to_Pos -New_RPath
-search_as((Pos,Cost_to_Pos,RPath),find(Target_Obj),Current_Agenda,NewPos,(Total_Cost,Cost_to_NewPos,New_RPath)):-
+search_as((Pos,Cost_to_Pos,RPath),find(_Target_Obj),Current_Agenda,NewPos,(Total_Cost,Cost_to_NewPos,New_RPath)):-
   map_adjacent(Pos,NewPos,empty),   % find valid move (can only move into empty)
   \+ memberchk(NewPos,RPath),       % check not already been to position on this path
   Cost_to_NewPos is Cost_to_Pos+1,  % == path length
@@ -88,7 +88,7 @@ new_setof(_,_,[]). % no posible moves
 % Update agenda by looking at first item and adding possible moves
 % +Current_Agenda +Task -New_Agenda
 update_agenda(Current_Agenda,Task,New_Agenda):-
-  Current_Agenda=[((Total_Cost,Cost_To_Pos,RPath),Pos)|Rest],
+  Current_Agenda=[((_Total_Cost,Cost_To_Pos,RPath),Pos)|Rest],
   new_setof((Details,NewPos),search_as((Pos,Cost_To_Pos,RPath),Task,Current_Agenda,NewPos,Details),New_Moves),
   append(Rest,New_Moves,Unsorted_New_Agenda),
   sort(Unsorted_New_Agenda,New_Agenda). % More agressive prunning
@@ -96,13 +96,13 @@ update_agenda(Current_Agenda,Task,New_Agenda):-
 % GO TO Task COMPLETE if first item in agenda moves onto target position
 % +Target +Agenda -Cost -RPath
 solve_task_as(go(Target_Pos),Agenda,Cost,RPath):-
-  Agenda=[(Details,Target_Pos)|Rest],
+  Agenda=[(Details,Target_Pos)|_Rest],
   Details=(_,Cost,RRPath),
   append([Target_Pos],RRPath,RPath),!.
 
 % FIND OBJECT task COMPLETE if first item in agenda is adjacent to object
 solve_task_as(find(Target_Obj),Agenda,Cost,RPath):-
-  Agenda=[(Details,Pos)|Rest],
+  Agenda=[(Details,Pos)|_Rest],
   Details=(_,Cost,RRPath),
   map_adjacent(Pos,_,Target_Obj),
   append([Pos],RRPath,RPath),!.
@@ -157,17 +157,17 @@ cheapest_option(Agenda,New_Pos,New_Cost):-
 % Extracting values from agenda (ie head on agenda)
 % +Agenda, -Pos, -Rest
 test_1(Agenda,Pos,Rest):-
-  Agenda=[((_TC,Cost_to_Pos),Pos)|Rest].
+  Agenda=[((_TC,_Cost_to_Pos),Pos)|Rest].
   %test_1([(1,1),p(1,1)],Pos).
 
 test_2(Agenda,Pos,RPath):-
-  Agenda=[((_TC,Cost_to_Pos,RPath),Pos)|Rest].
+  Agenda=[((_TC,_Cost_to_Pos,RPath),Pos)|_Rest].
 
 test_4(Target,Agenda,C,RP):-
   Agenda=[((_TC,C,RP),Target)|_Rest].
 
 test_5(Target,Agenda,Cost,RPath):-
-  Agenda=[(Details,Target)|Rest],
+  Agenda=[(Details,Target)|_Rest],
   Details=(_,Cost,RPath),
   length(RPath,L),
   L@>2.
@@ -176,7 +176,7 @@ test_5(Target,Agenda,Cost,RPath):-
 % detect other routes already in agenda
 % +Agenad +New_Item -Occurences
 test_6(Agenda,New_Item,Occurences):-
-  New_Item=((_Total_Cost,Cost_To_NewPos,_RPath),New_Pos),
+  New_Item=((_Total_Cost,_Cost_To_NewPos,_RPath),New_Pos),
   findall(((_,_,_),New_Pos),Agenda,Occurences).
 
 % finall occurences of New_Pos in Agenda which are cheaper
