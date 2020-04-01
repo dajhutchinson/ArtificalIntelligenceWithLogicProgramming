@@ -93,6 +93,19 @@ actor_links(A,Links):-
  *    - Instead of finding locations by doing a BFS from agent, move across board (Requires knowing board dimensions)
  */
 
+% Main Predicate
+% -A
+find_by_traversing(A).
+  % same as visit_all but stop when actor deduced
+
+visit_all_oracles():-
+  % Get positions of oracles
+  % Get positions of charging_stations
+  % REPEAT {
+    % go to nearest oracle which has not been visited
+    % go to nearest charging station
+  % }
+
 % oracles & fuel stations
 o(1). o(2). o(3). o(4). o(5). o(6). o(7). o(8). o(9). o(10).
 c(1). c(2).
@@ -125,11 +138,37 @@ find_locations([_Object|Rest_Objects],Locations):-
 adjacent_object_position(Position,Object,Object_Position):-
   map_adjacent(Position,Object_Position,Object).
 
-find_by_traversing(Charging_Locations):-
-  set_of_charging_stations(Cs),
-  set_of_oracles(Os),
-  find_locations(Cs,Charging_Locations).
+% Find closest charging station
+% +Charging_Locations +C +Path
+path_to_nearest_charging(Charging_Locations,Path):-
+  test_5(Charging_Locations,Adj_Locations),
+  find_paths(Adj_Locations,Unsorted_Paths),
+  sort(Unsorted_Paths,[(_Cost,Path)|Rest]),!.
 
+% Empty adjacent positions USE to find location adjacent to charging station
+% +Charging_Locations -Adj_Locations
+% BASE CASE
+empty_adjacent_spaces([],[]):-!.
+empty_adjacent_spaces([L|Rest_Locations],Adj_Locations):-
+  setof(Pos,adjacent_object_position(L,empty,Pos),Adj_Positions),
+  append(Adj_Positions,Rest_Adj_Locations,Adj_Locations),
+  test_5(Rest_Locations,Rest_Adj_Locations).
+
+% Find path and cost to many locations
+% +Locations -Paths
+find_paths([],[]):-!.
+
+% there is a path to L
+find_paths(Locations,Paths):-
+  Locations=[L|Rest_Locations],
+  Task=go(L),
+  find_path(Task,Cost,Path),
+  Paths=[(Cost,Path)|Other_Paths],
+  find_paths(Rest_Locations,Other_Paths).
+
+% there is NO path to L
+find_paths([_L|Rest_Locations],Paths):-
+  find_paths(Rest_Locations,Paths).
 
 /*
  *  TESTS
@@ -155,6 +194,7 @@ test_3(Locations):-
   my_agent(Agent),
   Locations=[L|Rest],
   adjacent_object_position(L,empty,Adj_Location),
+  adjacent_object_position(Adj_Location,c(C),L),
   solve_task(go(Adj_Location),_Cost),
   query_world(agent_topup_energy,[Agent,c(C)]),
   test_3(Rest),!.
