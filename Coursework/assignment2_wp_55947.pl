@@ -14,11 +14,11 @@ find_identity_2(A):-
   full_deduction(As,[A]).
 
 find_identity_o(A):-
-  A='Not yet implemented'.
+  find_by_traversing(A).
 
 /*
- * Mine
- *    NOTE - Can only get one link at a time (ie cant do setof)
+ * Part 2
+ * find_identity_2
  */
 
 % Set of actors
@@ -73,6 +73,65 @@ actor_links(A,Links):-
   setof(Link,wt_link(Wiki_Text,Link),Links). % Extract set of Links from WikiText
 
 /*
+ *  Part 3
+ *  TODO
+ *    Navigate to Oracles, picking up clues
+ *    Keep navigating until actor has been deduced
+ *    Need to think about refuelling (NOTE work on this first)
+ *
+ *  Plan
+ *    1. Write predicate to keep moving between oracles, refuelling when needed
+ *    2. Pick up clues from oracles
+ *    3. Deduce actor. Stop when done
+ *
+ *  Strategy
+ *    Find fuel stations at start.
+ *    Record their positions
+ *    Then find oracles & fuel up after each one at closest fuel station
+ *
+ *  IDEA
+ *    - Instead of finding locations by doing a BFS from agent, move across board (Requires knowing board dimensions)
+ */
+
+% oracles & fuel stations
+o(1). o(2). o(3). o(4). o(5). o(6). o(7). o(8). o(9). o(10).
+c(1). c(2).
+
+set_of_oracles(Os):-
+  setof(o(O),o(O),Os).
+
+set_of_charging_stations(Cs):-
+  setof(c(C),c(C),Cs).
+
+% Find locations of specified objects (oracles or charging stations)
+% BASE CASE
+find_locations([],[]):-!.
+
+% +Objects -Locations
+find_locations([Object|Rest_Objects],Locations):-
+  Task=find(Object),
+  find_path(Task,_Cost,Path), % find path to object (This could fail)
+  reverse(Path,[Adj_Pos|_RRPath]), % last position in path
+  adjacent_object_position(Adj_Pos,Object,Object_Location), % find which adjacent position Object is in
+  Locations=[Object_Location|Rest_Locations], % add Object Position to list
+  find_locations(Rest_Objects,Rest_Locations),!. % Find location of other objects
+
+% No path to Object
+find_locations([_Object|Rest_Objects],Locations):-
+  find_locations(Rest_Objects,Locations).
+
+% Returns Object_Position of Object when given Position which is adjacent
+% +Position +Object -Object_Position
+adjacent_object_position(Position,Object,Object_Position):-
+  map_adjacent(Position,Object_Position,Object).
+
+find_by_traversing(Charging_Locations):-
+  set_of_charging_stations(Cs),
+  set_of_oracles(Os),
+  find_locations(Cs,Charging_Locations).
+
+
+/*
  *  TESTS
  */
 
@@ -86,3 +145,16 @@ test_1(As):-
 test_2(A,Links):-
   wp(A,Wiki_Text),
   setof(Link,wt_link(Wiki_Text,Link),Links).
+
+% Continuously go between charging locations
+% + Locations
+test_3([]):-!.
+
+% Go to Locations and charge at each one
+test_3(Locations):-
+  my_agent(Agent),
+  Locations=[L|Rest],
+  adjacent_object_position(L,empty,Adj_Location),
+  solve_task(go(Adj_Location),_Cost),
+  query_world(agent_topup_energy,[Agent,c(C)]),
+  test_3(Rest),!.

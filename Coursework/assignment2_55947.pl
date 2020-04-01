@@ -10,12 +10,17 @@ candidate_number(55947).
 % solve task using A*
 % +Task (go/find) +Cost -Path
 solve_task(Task,Cost):-
- my_agent(Agent),
- query_world(agent_current_position,[Agent,Cur_Pos]), % get current position
- Initial_Agenda=[((0,0,[]),Cur_Pos)], % initial agenda start at current position
- solve_task_as(Task,Initial_Agenda,Cost,RPath), % solve the task
- reverse(RPath,[_Init|Path]), % Reverse path & remove starting node
- query_world(agent_do_moves,[Agent,Path]). % display pay
+  my_agent(Agent),
+  find_path(Task,Cost,Path),
+  query_world(agent_do_moves,[Agent,Path]). % display pay
+
+% Returns path (does not traverse it though)
+find_path(Task,Cost,Path):-
+  my_agent(Agent),
+  query_world(agent_current_position,[Agent,Cur_Pos]), % get current position
+  Initial_Agenda=[((0,0,[]),Cur_Pos)], % initial agenda start at current position
+  solve_task_as(Task,Initial_Agenda,Cost,RPath), % solve the task
+  reverse(RPath,[_Init|Path]). % Reverse path & remove starting node
 
 /*
  *  ME
