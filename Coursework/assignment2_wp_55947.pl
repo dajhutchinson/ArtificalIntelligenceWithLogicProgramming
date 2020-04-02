@@ -205,6 +205,8 @@ check_board(Row,Width,Height,Locations):-
  *-----------*/
 
 % Main Predicate
+% Traverse to oracles, picking up clues and deduce the actor
+% Stop when deduced (~ 4 oracles)
 % -A
 find_by_traversing(A).
 
@@ -221,9 +223,9 @@ visit_next_oracle(Charge_Locations,Oracle_Locations):- % oracles to visit
   visit_closest(Oracle_Locations,2,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
   query_world(agent_ask_oracle,[Agent,Visited_Oracle_Obj,link,Link]),
   say(Link,Agent),
-  visit_closest(Charge_Locations,1,_Visited_Charge_Pos,Visited_Charge_Obj,_),
-  query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
+  visit_closest(Charge_Locations,1,_Visited_Charge_Pos,Visited_Charge_Obj,_), % if closest charging station is blocked or more than 50 moves away then we fail here
   say("Charged",Agent),
+  query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
   visit_next_oracle(Charge_Locations,Remaining_Oracle_Locations),!. % Visit next closests unvisited oracle
   % Get positions of oracles
   % Get positions of charging_stations

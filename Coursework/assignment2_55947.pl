@@ -62,6 +62,13 @@ new_setof(_,_,[]). % no posible moves
 
 % Update agenda by looking at first item and adding possible moves
 % +Current_Agenda +Task -New_Agenda
+update_agenda(Current_Agenda,Task,[]):- % best path is too long, stop looking
+  Current_Agenda=[((_Total_Cost,_Cost_to_Pos,RPath),_Pos)|_Rest],
+  length(RPath,L),
+  L>40,
+  my_agent(Agent),
+  say("Path too long.",Agent), say(Task,Agent).
+
 update_agenda(Current_Agenda,Task,New_Agenda):-
   Current_Agenda=[((_Total_Cost,Cost_To_Pos,RPath),Pos)|Rest],
   new_setof((Details,NewPos),search_as((Pos,Cost_To_Pos,RPath),Task,Current_Agenda,NewPos,Details),New_Moves),
