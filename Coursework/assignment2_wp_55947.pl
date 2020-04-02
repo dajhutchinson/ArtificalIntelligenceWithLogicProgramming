@@ -1,6 +1,8 @@
 % candidate_number(55947).
 
 % set_prolog_flag(answer_write_options,[max_depth(0)]).
+% ./ailp.pl assignment2 part3
+
 
 % Find hidden identity by repeatedly calling agent_ask_oracle(oscar,o(1),link,L)
 % find_identity(-A)
@@ -93,19 +95,6 @@ actor_links(A,Links):-
  *    - Instead of finding locations by doing a BFS from agent, move across board (Requires knowing board dimensions)
  */
 
-% Main Predicate
-% -A
-find_by_traversing(A).
-  % same as visit_all but stop when actor deduced
-
-visit_all_oracles():-
-  % Get positions of oracles
-  % Get positions of charging_stations
-  % REPEAT {
-    % go to nearest oracle which has not been visited
-    % go to nearest charging station
-  % }
-
 % oracles & fuel stations
 o(1). o(2). o(3). o(4). o(5). o(6). o(7). o(8). o(9). o(10).
 c(1). c(2).
@@ -116,85 +105,201 @@ set_of_oracles(Os):-
 set_of_charging_stations(Cs):-
   setof(c(C),c(C),Cs).
 
-% Find locations of specified objects (oracles or charging stations)
-% BASE CASE
-find_locations([],[]):-!.
+/*-------------------*
+*  BOARD DIMENSIONS *
+*-------------------*/
 
-% +Objects -Locations
-find_locations([Object|Rest_Objects],Locations):-
-  Task=find(Object),
-  find_path(Task,_Cost,Path), % find path to object (This could fail)
-  reverse(Path,[Adj_Pos|_RRPath]), % last position in path
-  adjacent_object_position(Adj_Pos,Object,Object_Location), % find which adjacent position Object is in
-  Locations=[Object_Location|Rest_Locations], % add Object Position to list
-  find_locations(Rest_Objects,Rest_Locations),!. % Find location of other objects
+% valid widths (+1 since one outside the boundary can move onto the boundary)
+valid_widths(Width,[]):-
+ \+ map_adjacent(p(Width,1),_,_),!. % not in boundaries
 
-% No path to Object
-find_locations([_Object|Rest_Objects],Locations):-
-  find_locations(Rest_Objects,Locations).
+valid_widths(Width,Valid_Widths):-
+ map_adjacent(p(Width,1),_,_),
+ Valid_Widths=[Width|Other_Valid_Widths],
+ Next_Width is Width+1,
+ valid_widths(Next_Width,Other_Valid_Widths),!.
 
-% Returns Object_Position of Object when given Position which is adjacent
-% +Position +Object -Object_Position
-adjacent_object_position(Position,Object,Object_Position):-
-  map_adjacent(Position,Object_Position,Object).
+% valid heights (+1 since one outside the boundary can move onto the boundary)
+valid_heights(Height,[]):-
+ \+ map_adjacent(p(1,Height),_,_),!. % not in boundaries
 
-% Find closest charging station
-% +Charging_Locations +C +Path
-path_to_nearest_charging(Charging_Locations,Path):-
-  test_5(Charging_Locations,Adj_Locations),
-  find_paths(Adj_Locations,Unsorted_Paths),
-  sort(Unsorted_Paths,[(_Cost,Path)|Rest]),!.
+valid_heights(Height,Valid_Heights):-
+ map_adjacent(p(1,Height),_,_),
+ Valid_Heights=[Height|Other_Valid_Heights],
+ Next_Height is Height+1,
+ valid_heights(Next_Height,Other_Valid_Heights),!.
 
-% Empty adjacent positions USE to find location adjacent to charging station
-% +Charging_Locations -Adj_Locations
-% BASE CASE
-empty_adjacent_spaces([],[]):-!.
-empty_adjacent_spaces([L|Rest_Locations],Adj_Locations):-
-  setof(Pos,adjacent_object_position(L,empty,Pos),Adj_Positions),
-  append(Adj_Positions,Rest_Adj_Locations,Adj_Locations),
-  test_5(Rest_Locations,Rest_Adj_Locations).
+% get board dimensions
+board_dimensions(Width,Height):-
+ valid_heights(1,Heights),
+ reverse(Heights,RHeights),
+ RHeights=[_|[Height|_RestH]],
+ valid_widths(1,Widths),
+ reverse(Widths,RWidths),
+ RWidths=[_|[Width|_RestW]].
 
-% Find path and cost to many locations
-% +Locations -Paths
+/*-----------------*
+*  FIND LOCATIONS *
+*-----------------*/
+
+% Find the location of every special object
+% -Locations
+find_locations(Locations):-
+ board_dimensions(W,H),
+ check_board(1,W,H,Many_Locations),
+ sort(Many_Locations,Locations).
+
+% Extract charge locations from result of find_locations(Locations)
+% +Locations -Oracle_Locations
+charging_locations(Locations,Charge_Locations):-
+  Charge_Locations=[Charge_1,Charge_2],
+  Locations=[Charge_1|[Charge_2|_Rest]]. % Locations is sorted and number of charge is fixed
+
+% Extract locations from result of find_locations(Locations)
+% +Locations -Oracle_Locations
+oracle_locations(Locations,Oracle_Locations):-
+  Locations=[_Charge_1|[_Charge_2|Oracle_Locations]]. % Locations is sorted and number of charge is fixed
+
+% end of row
+% +Pos +Width -Locations
+check_row(Pos,Width,[]):-
+ Pos=p(X,_Y),
+ X>Width,!.
+
+% Adjacent includes an oracle
+check_row(Pos,Width,Locations):-
+ Pos=p(X,Y),
+ map_adjacent(Pos,Obj_Pos,o(O)),
+ Locations=[(o(O),Obj_Pos)|Other_Locations],
+ check_row(p(X+1,Y),Width,Other_Locations),!.
+
+% Adjacent includes a charging
+check_row(Pos,Width,Locations):-
+ Pos=p(X,Y),
+ map_adjacent(Pos,Obj_Pos,c(C)),
+ Locations=[(c(C),Obj_Pos)|Other_Locations],
+ Next_X is X+1,
+ check_row(p(Next_X,Y),Width,Other_Locations),!.
+
+% Adjacent is not special
+check_row(Pos,Width,Locations):-
+ Pos=p(X,Y),
+ Next_X is X+1,
+ check_row(p(Next_X,Y),Width,Locations),!.
+
+% Row not on board
+check_board(Row,_Width,Height,[]):-
+ Row>Height,!.
+
+% Check every row on board
+% +Row +Width +Height -Locations
+check_board(Row,Width,Height,Locations):-
+ Pos=p(1,Row),
+ check_row(Pos,Width,Row_Locations),
+ append(Row_Locations,Other_Locations,Locations),
+ Next_Row is Row+1,
+ check_board(Next_Row,Width,Height,Other_Locations).
+
+/*-----------*
+ *  MOVEMENT *
+ *-----------*/
+
+% Main Predicate
+% -A
+find_by_traversing(A).
+
+visit_all_oracles():-
+  find_locations(Locations),
+  oracle_locations(Locations,OLs),
+  charging_locations(Locations,CLs),
+  visit_next_oracle(CLs,OLs).
+
+% Visits (Probs) next closest unvisited oracle then refuels
+visit_next_oracle(Charge_Locations,[]):-!. % No more oracles to visit
+visit_next_oracle(Charge_Locations,Oracle_Locations):- % oracles to visit
+  my_agent(Agent),
+  visit_closest(Oracle_Locations,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
+  query_world(agent_ask_oracle,[Agent,Visited_Oracle_Obj,link,Link]),
+  say(Link,Agent),
+  visit_closest(Charge_Locations,_Visited_Charge_Pos,Visited_Charge_Obj,_),
+  query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
+  say("Charged",Agent),
+  visit_next_oracle(Charge_Locations,Remaining_Oracle_Locations),!. % Visit next closests unvisited oracle
+  % Get positions of oracles
+  % Get positions of charging_stations
+  % REPEAT {
+    % go to nearest oracle which has not been visited
+    % go to nearest charging station
+  % }
+
+% Move to closest of Locations in Locations (New_Locations removes this location)
+% +Locations -New_Locations
+visit_closest(Locations,Visited_Pos,Visited_Obj,New_Locations):-
+  distances_to_locations(Locations,Distances), %distances to oracles
+  sort(Distances,Sorted_Distances),
+  first_n(Sorted_Distances,3,Closest_Distances), % PRUNNING - only going to find paths to 3 closest oracles
+  extract_location_details_from_distance(Closest_Distances,Closest_Locations),
+  find_paths(Closest_Locations,Paths), % find paths to all adjacent positions
+  sort(Paths,Sorted_Paths),
+  Sorted_Paths=[Best|_Rest], % Best = Probs shortest path to an oracle
+  Best=(_Best_Cost,Best_Obj,Best_Obj_Pos,Best_Path),
+  Visited_Obj=Best_Obj,
+  Visited_Pos=Best_Obj_Pos,
+  remove((Best_Obj,Best_Obj_Pos),Locations,New_Locations), % remove traversed path
+  my_agent(Agent),
+  query_world(agent_do_moves,[Agent,Best_Path]),!. % display best path
+
+/*-----------*
+ *  UTILITY *
+ *-----------*/
+
+% find the shortest path to a number of Positions (Uses Part 1)
+% pass list of locations of adjacent positions
+% +Positions -Paths
 find_paths([],[]):-!.
-
-% there is a path to L
 find_paths(Locations,Paths):-
-  Locations=[L|Rest_Locations],
-  Task=go(L),
+  Locations=[(Obj,Obj_Pos)|Rest_Locations],
+  Task=find(Obj),  % Not using position %TODO change this to use go(Obj_Pos) this will require finding an empty space around Obj
   find_path(Task,Cost,Path),
-  Paths=[(Cost,Path)|Other_Paths],
-  find_paths(Rest_Locations,Other_Paths).
+  Paths=[(Cost,Obj,Obj_Pos,Path)|Rest_Paths],
+  find_paths(Rest_Locations,Rest_Paths).
 
-% there is NO path to L
-find_paths([_L|Rest_Locations],Paths):-
-  find_paths(Rest_Locations,Paths).
+% distance from agent to defined positions
+distances_to_locations([],[]):-!.
+distances_to_locations(Locations,Distances):-
+  Locations=[(Obj,Obj_Pos)|Rest_Locations],
+  my_agent(Agent),
+  query_world(agent_current_position,[Agent,Agent_Pos]),
+  map_distance(Agent_Pos,Obj_Pos,Distance),
+  Distances=[(Distance,Obj,Obj_Pos)|Rest_Distances],
+  distances_to_locations(Rest_Locations,Rest_Distances).
+
+% first n elements of list (or full list if |list|<n)
+first_n([],_,[]):-!. % List exhausted
+first_n(_,0,[]):-!.  % Found n
+first_n(List,N,First_n):-
+  List=[Elem|Rest_List],
+  First_n=[Elem|Rest_First_n],
+  Next_N is N-1,
+  first_n(Rest_List,Next_N,Rest_First_n).
+
+% extract location details from the format that distance_to_locations produces
+extract_location_details_from_distance([],[]):-!.
+extract_location_details_from_distance(Distances,Obj_Details):-
+  Distances=[(_Dist,Obj,Obj_Pos)|Rest_Distances],
+  Obj_Details=[(Obj,Obj_Pos)|Rest_Obj_Details],
+  extract_location_details_from_distance(Rest_Distances,Rest_Obj_Details).
+
+% Remove object from list
+remove(Obj,[],[]):-!.
+remove(Obj,List,New_List):- % Target object at head of list
+  List=[Obj|Rest_List],
+  remove(Obj,Rest_List,New_List),!.
+remove(Obj,List,New_List):- % Another object at head
+  List=[X|Rest_List],
+  New_List=[X|Rest_New_List],
+  remove(Obj,Rest_List,Rest_New_List),!.
 
 /*
  *  TESTS
  */
-
-% Set of all possible actors
-% -As
-test_1(As):-
-  setof(A,actor(A),As).
-
-% list of links in actors page
-% +A -Ls
-test_2(A,Links):-
-  wp(A,Wiki_Text),
-  setof(Link,wt_link(Wiki_Text,Link),Links).
-
-% Continuously go between charging locations
-% + Locations
-test_3([]):-!.
-
-% Go to Locations and charge at each one
-test_3(Locations):-
-  my_agent(Agent),
-  Locations=[L|Rest],
-  adjacent_object_position(L,empty,Adj_Location),
-  adjacent_object_position(Adj_Location,c(C),L),
-  solve_task(go(Adj_Location),_Cost),
-  query_world(agent_topup_energy,[Agent,c(C)]),
-  test_3(Rest),!.
