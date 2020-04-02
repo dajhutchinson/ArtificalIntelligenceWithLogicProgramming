@@ -218,10 +218,10 @@ visit_all_oracles():-
 visit_next_oracle(Charge_Locations,[]):-!. % No more oracles to visit
 visit_next_oracle(Charge_Locations,Oracle_Locations):- % oracles to visit
   my_agent(Agent),
-  visit_closest(Oracle_Locations,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
+  visit_closest(Oracle_Locations,2,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
   query_world(agent_ask_oracle,[Agent,Visited_Oracle_Obj,link,Link]),
   say(Link,Agent),
-  visit_closest(Charge_Locations,_Visited_Charge_Pos,Visited_Charge_Obj,_),
+  visit_closest(Charge_Locations,1,_Visited_Charge_Pos,Visited_Charge_Obj,_),
   query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
   say("Charged",Agent),
   visit_next_oracle(Charge_Locations,Remaining_Oracle_Locations),!. % Visit next closests unvisited oracle
@@ -233,11 +233,11 @@ visit_next_oracle(Charge_Locations,Oracle_Locations):- % oracles to visit
   % }
 
 % Move to closest of Locations in Locations (New_Locations removes this location)
-% +Locations -New_Locations
-visit_closest(Locations,Visited_Pos,Visited_Obj,New_Locations):-
+% +Locations +Prune_Level -Visited_Pos -Visited_Obj -New_Locations
+visit_closest(Locations,Prune_Level,Visited_Pos,Visited_Obj,New_Locations):-
   distances_to_locations(Locations,Distances), %distances to oracles
   sort(Distances,Sorted_Distances),
-  first_n(Sorted_Distances,3,Closest_Distances), % PRUNNING - only going to find paths to 3 closest oracles
+  first_n(Sorted_Distances,Prune_Level,Closest_Distances), % PRUNNING - only going to find paths to PRUNE_LEVEL closest oracles
   extract_location_details_from_distance(Closest_Distances,Closest_Locations),
   find_paths(Closest_Locations,Paths), % find paths to all adjacent positions
   sort(Paths,Sorted_Paths),
@@ -253,16 +253,29 @@ visit_closest(Locations,Visited_Pos,Visited_Obj,New_Locations):-
  *  UTILITY *
  *-----------*/
 
+empty_adjacent_positions(Pos,Adj_Positions):-
+  setof(Adj_Pos,map_adjacent(Pos,Adj_Pos,empty),Adj_Positions).
+
 % find the shortest path to a number of Positions (Uses Part 1)
 % pass list of locations of adjacent positions
 % +Positions -Paths
 find_paths([],[]):-!.
 find_paths(Locations,Paths):-
   Locations=[(Obj,Obj_Pos)|Rest_Locations],
-  Task=find(Obj),  % Not using position %TODO change this to use go(Obj_Pos) this will require finding an empty space around Obj
+  empty_adjacent_positions(Obj_Pos,Adj_Obj_Positions),
+  find_paths_to(Adj_Obj_Positions,Obj,Obj_Pos,Possible_Paths),
+  append(Possible_Paths,Rest_Paths,Paths),
+  find_paths(Rest_Locations,Rest_Paths).
+
+% find paths to specified positions
+% used for adjacent positions around objects in find_paths
+find_paths_to([],_,_,[]):-!.
+find_paths_to(Empty_Positions,Obj,Obj_Pos,Paths):-
+  Empty_Positions=[Pos|Rest_Empty_Positions],
+  Task=go(Pos),
   find_path(Task,Cost,Path),
   Paths=[(Cost,Obj,Obj_Pos,Path)|Rest_Paths],
-  find_paths(Rest_Locations,Rest_Paths).
+  find_paths_to(Rest_Empty_Positions,Obj,Obj_Pos,Rest_Paths).
 
 % distance from agent to defined positions
 distances_to_locations([],[]):-!.
