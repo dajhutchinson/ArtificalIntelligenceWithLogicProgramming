@@ -16,7 +16,13 @@ find_identity_2(A):-
   full_deduction(As,[A]).
 
 find_identity_o(A):-
-  find_by_traversing(A).
+  my_agent(Agent),
+  set_of_actors(As),
+  find_locations(Locations),
+  oracle_locations(Locations,OLs),
+  charging_locations(Locations,CLs),
+  find_by_traversing(CLs,OLs,As,[A]),
+  say(A,Agent).
 
 /*
  * Part 2
@@ -208,7 +214,21 @@ check_board(Row,Width,Height,Locations):-
 % Traverse to oracles, picking up clues and deduce the actor
 % Stop when deduced (~ 4 oracles)
 % -A
-find_by_traversing(A).
+find_by_traversing(_Charge_Locations,_Oracle_Locations,Actors,Actors):-
+  length(Actors,L),
+  L=1,!.
+
+find_by_traversing(Charge_Locations,Oracle_Locations,Actors,Have_All_Links):-
+  my_agent(Agent),
+  visit_closest(Oracle_Locations,2,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
+  query_world(agent_ask_oracle,[Agent,Visited_Oracle_Obj,link,Link]),
+  say(Link,Agent),
+  deduce_id(Actors,Link,Have_Link),         % Deduce which Actors have this link
+  say(Have_Link,Agent),
+  visit_closest(Charge_Locations,1,_Visited_Charge_Pos,Visited_Charge_Obj,_), % if closest charging station is blocked or more than 50 moves away then we fail here
+  say("Charged",Agent),
+  query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
+  find_by_traversing(Charge_Locations,Remaining_Oracle_Locations,Have_Link,Have_All_Links). % Test another link (might hit base case)
 
 visit_all_oracles():-
   find_locations(Locations),
