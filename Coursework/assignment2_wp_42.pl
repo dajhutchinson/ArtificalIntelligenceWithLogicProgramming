@@ -1,4 +1,4 @@
-% candidate_number(55947).
+% candidate_number(42).
 
 % set_prolog_flag(answer_write_options,[max_depth(0)]).
 % ./ailp.pl assignment2 part3
@@ -225,7 +225,7 @@ find_by_traversing(Charge_Locations,Oracle_Locations,Actors,Have_All_Links):-
   say(Link,Agent),
   deduce_id(Actors,Link,Have_Link),         % Deduce which Actors have this link
   say(Have_Link,Agent),
-  visit_closest(Charge_Locations,1,_Visited_Charge_Pos,Visited_Charge_Obj,_), % if closest charging station is blocked or more than 50 moves away then we fail here
+  visit_closest(Charge_Locations,2,_Visited_Charge_Pos,Visited_Charge_Obj,_), % if closest charging station is blocked or more than 50 moves away then we fail here
   say("Charged",Agent),
   query_world(agent_topup_energy,[Agent,Visited_Charge_Obj]), % refuel
   find_by_traversing(Charge_Locations,Remaining_Oracle_Locations,Have_Link,Have_All_Links). % Test another link (might hit base case)
@@ -237,7 +237,7 @@ visit_all_oracles():-
   visit_next_oracle(CLs,OLs).
 
 % Visits (Probs) next closest unvisited oracle then refuels
-visit_next_oracle(Charge_Locations,[]):-!. % No more oracles to visit
+visit_next_oracle(_Charge_Locations,[]):-!. % No more oracles to visit
 visit_next_oracle(Charge_Locations,Oracle_Locations):- % oracles to visit
   my_agent(Agent),
   visit_closest(Oracle_Locations,2,_Visited_Oracle_Pos,Visited_Oracle_Obj,Remaining_Oracle_Locations),
@@ -299,6 +299,10 @@ find_paths_to(Empty_Positions,Obj,Obj_Pos,Paths):-
   Paths=[(Cost,Obj,Obj_Pos,Path)|Rest_Paths],
   find_paths_to(Rest_Empty_Positions,Obj,Obj_Pos,Rest_Paths).
 
+find_paths_to(Empty_Positions,Obj,Obj_Pos,Paths):- % no valid path found
+  Empty_Positions=[_Pos|Rest_Empty_Positions],
+  find_paths_to(Rest_Empty_Positions,Obj,Obj_Pos,Paths).
+
 % distance from agent to defined positions
 distances_to_locations([],[]):-!.
 distances_to_locations(Locations,Distances):-
@@ -326,7 +330,7 @@ extract_location_details_from_distance(Distances,Obj_Details):-
   extract_location_details_from_distance(Rest_Distances,Rest_Obj_Details).
 
 % Remove object from list
-remove(Obj,[],[]):-!.
+remove(_Obj,[],[]):-!.
 remove(Obj,List,New_List):- % Target object at head of list
   List=[Obj|Rest_List],
   remove(Obj,Rest_List,New_List),!.

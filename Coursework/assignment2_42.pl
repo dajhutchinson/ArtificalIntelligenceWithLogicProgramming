@@ -1,4 +1,4 @@
-candidate_number(55947).
+candidate_number(42).
 
 /*
  *  start.
@@ -20,7 +20,7 @@ find_path(Task,Cost,Path):-
   query_world(agent_current_position,[Agent,Cur_Pos]), % get current position
   Initial_Agenda=[((0,0,[]),Cur_Pos)], % initial agenda start at current position
   solve_task_as(Task,Initial_Agenda,Cost,RPath), % solve the task
-  reverse(RPath,[_Init|Path]). % Reverse path & remove starting node
+  reverse(RPath,[_Init|Path]),!. % Reverse path & remove starting node
 
 /*
  *  ME
@@ -62,21 +62,30 @@ new_setof(_,_,[]). % no posible moves
 
 % Update agenda by looking at first item and adding possible moves
 % +Current_Agenda +Task -New_Agenda
-update_agenda(Current_Agenda,Task,[]):- % best path is too long, stop looking
+update_agenda(Current_Agenda,_Task,[]):- % best path is too long, stop looking
   Current_Agenda=[((_Total_Cost,_Cost_to_Pos,RPath),_Pos)|_Rest],
-  length(RPath,L),
-  L>40,
   my_agent(Agent),
-  say("Path too long.",Agent), say(Task,Agent).
+  length(RPath,L),
+  L>50,
+  string_concat("*",L,C),
+  say(C,Agent). %TODO
 
 update_agenda(Current_Agenda,Task,New_Agenda):-
   Current_Agenda=[((_Total_Cost,Cost_To_Pos,RPath),Pos)|Rest],
+  my_agent(Agent), %TODO
+  length(RPath,L), %TODO
+  L<51,
+  say(L,Agent), %TODO
   new_setof((Details,NewPos),search_as((Pos,Cost_To_Pos,RPath),Task,Current_Agenda,NewPos,Details),New_Moves),
   append(Rest,New_Moves,Unsorted_New_Agenda),
   sort(Unsorted_New_Agenda,New_Agenda). % More agressive prunning
 
 % GO TO Task COMPLETE if first item in agenda moves onto target position
 % +Target +Agenda -Cost -RPath
+solve_task_as(_,[],_,[]):-
+  my_agent(Agent),
+  say("No short path",Agent),!. % Cannot find route shorter than 41
+
 solve_task_as(go(Target_Pos),Agenda,Cost,RPath):-
   Agenda=[(Details,Target_Pos)|_Rest],
   Details=(_,Cost,RRPath),
